@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, User, Search, Menu, X, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { useWallet } from '@/context/WalletContext';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -17,6 +18,7 @@ const navLinks = [
 export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
+  const { isConnected, address, connect, ethBalance } = useWallet();
   const location = useLocation();
 
   return (
@@ -75,11 +77,34 @@ export const Header = () => {
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <Search className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
-              <Link to="/wallet">
+            
+            {/* Wallet Button */}
+            {isConnected ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex items-center gap-2 text-xs"
+                asChild
+              >
+                <Link to="/wallet">
+                  <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                  <span>{ethBalance} ETH</span>
+                  <span className="text-muted-foreground">
+                    {address?.slice(0, 4)}...{address?.slice(-4)}
+                  </span>
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden md:flex"
+                onClick={connect}
+              >
                 <Wallet className="w-5 h-5" />
-              </Link>
-            </Button>
+              </Button>
+            )}
+
             <Button variant="ghost" size="icon" asChild>
               <Link to="/account">
                 <User className="w-5 h-5" />
@@ -106,7 +131,7 @@ export const Header = () => {
       <div
         className={cn(
           "md:hidden absolute top-full left-0 right-0 bg-background border-b border-border transition-all duration-300 overflow-hidden",
-          isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          isMobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
         )}
       >
         <nav className="container mx-auto px-4 py-4">
@@ -123,11 +148,34 @@ export const Header = () => {
               {link.name}
             </Link>
           ))}
-          <div className="flex items-center gap-4 pt-4">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              <Wallet className="w-4 h-4" />
-              Connect Wallet
-            </Button>
+          <div className="pt-4 space-y-3">
+            {isConnected ? (
+              <Link
+                to="/wallet"
+                className="flex items-center justify-between py-3 text-lg font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Wallet
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {ethBalance} ETH
+                </span>
+              </Link>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+                onClick={() => {
+                  connect();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <Wallet className="w-4 h-4" />
+                Connect Wallet
+              </Button>
+            )}
           </div>
         </nav>
       </div>
